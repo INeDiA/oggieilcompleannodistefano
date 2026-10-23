@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>È il compleanno di NOME?</title>
+<style>
+  :root { --bg:#fff; --fg:#111; }
+  body.yes { --bg:#ffd400; --fg:#d6003c; }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--bg); color: var(--fg);
+    font-family: "Helvetica Neue", Arial, sans-serif;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; transition: background .6s, color .6s; overflow: hidden;
+  }
+  #answer { font-size: clamp(8rem, 42vw, 40rem); font-weight: 900; line-height: .9; margin: 0; letter-spacing: -.04em; }
+  #sub { font-size: clamp(1rem, 3vw, 1.6rem); margin-top: 2vh; opacity: .6; min-height: 1.5em; font-variant-numeric: tabular-nums; }
+  canvas { position: fixed; inset: 0; pointer-events: none; }
+</style>
+</head>
+<body>
+<div id="answer">NO</div>
+<div id="sub"></div>
+<canvas id="c"></canvas>
+<script>
+  // ——— da personalizzare ———
+  const NAME = "NOME";
+  // Mezzanotte del 24 ottobre 2026, ora italiana (CEST, +02:00)
+  const TARGET = new Date("2026-10-24T00:00:00+02:00").getTime();
+  // Per provare lo stato SÌ: aggiungi ?si all'URL
+  // ————————————————————————
+
+  const $ = id => document.getElementById(id);
+  const forced = location.search.includes("si");
+  document.title = `È il compleanno di ${NAME}?`;
+
+  let isYes = false;
+
+  function setYes() {
+    isYes = true;
+    document.body.classList.add("yes");
+    $("answer").textContent = "SÌ!";
+    $("sub").textContent = `Auguri ${NAME}! 🎂`;
+    document.title = `SÌ! Auguri ${NAME}! 🎉`;
+    confetti();
+  }
+
+  function tick() {
+    const left = TARGET - Date.now();
+    if (forced || left <= 0) { if (!isYes) setYes(); return; }
+    const s = Math.floor(left / 1000);
+    const h = String(Math.floor(s / 3600)).padStart(2, "0");
+    const m = String(Math.floor(s % 3600 / 60)).padStart(2, "0");
+    const sec = String(s % 60).padStart(2, "0");
+    $("sub").textContent = `ancora ${h}:${m}:${sec}`;
+  }
+  setInterval(tick, 250); tick();
+
+  function confetti() {
+    const cv = $("c"), ctx = cv.getContext("2d");
+    const fit = () => { cv.width = innerWidth; cv.height = innerHeight; };
+    fit(); addEventListener("resize", fit);
+    const colors = ["#d6003c", "#111", "#fff", "#00a86b", "#1e6fff", "#ff7a00"];
+    const ps = Array.from({ length: 220 }, () => ({
+      x: Math.random() * cv.width, y: -Math.random() * cv.height,
+      w: 6 + Math.random() * 8, h: 10 + Math.random() * 10,
+      vy: 2 + Math.random() * 4, vx: -1.5 + Math.random() * 3,
+      r: Math.random() * 6, vr: -.2 + Math.random() * .4,
+      c: colors[Math.floor(Math.random() * colors.length)]
+    }));
+    (function frame() {
+      ctx.clearRect(0, 0, cv.width, cv.height);
+      for (const p of ps) {
+        p.x += p.vx; p.y += p.vy; p.r += p.vr;
+        if (p.y > cv.height) { p.y = -20; p.x = Math.random() * cv.width; }
+        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r);
+        ctx.fillStyle = p.c; ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); ctx.restore();
+      }
+      requestAnimationFrame(frame);
+    })();
+  }
+</script>
+</body>
+</html>
