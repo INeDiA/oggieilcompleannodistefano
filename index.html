@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>È il compleanno di NOME?</title>
+<title>NO</title>
 <style>
   :root { --bg:#fff; --fg:#111; }
   body.yes { --bg:#ffd400; --fg:#d6003c; }
@@ -26,7 +26,6 @@
 <canvas id="c"></canvas>
 <script>
   // ——— da personalizzare ———
-  const NAME = "NOME";
   // Mezzanotte del 24 ottobre 2026, ora italiana (CEST, +02:00)
   const TARGET = new Date("2026-10-24T00:00:00+02:00").getTime();
   // Per provare lo stato SÌ: aggiungi ?si all'URL
@@ -34,7 +33,6 @@
 
   const $ = id => document.getElementById(id);
   const forced = location.search.includes("si");
-  document.title = `È il compleanno di ${NAME}?`;
 
   let isYes = false;
 
@@ -42,8 +40,8 @@
     isYes = true;
     document.body.classList.add("yes");
     $("answer").textContent = "SÌ!";
-    $("sub").textContent = `Auguri ${NAME}! 🎂`;
-    document.title = `SÌ! Auguri ${NAME}! 🎉`;
+    $("sub").textContent = "";
+    document.title = "SÌ!";
     confetti();
   }
 
