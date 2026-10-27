@@ -26,15 +26,25 @@
 <canvas id="c"></canvas>
 <script>
   // ——— da personalizzare ———
-  // Mezzanotte del 24 ottobre 2026, ora italiana (CEST, +02:00)
-  const TARGET = new Date("2026-10-24T00:00:00+02:00").getTime();
+  const MONTH = 10, DAY = 24;          // 24 ottobre
+  const DURATION = 24 * 3600 * 1000;   // SÌ dura 24h
   // Per provare lo stato SÌ: aggiungi ?si all'URL
   // ————————————————————————
+
+  // 24 ottobre è sempre prima dell'ultima domenica di ottobre → sempre CEST (+02:00)
+  const targetOf = y => new Date(`${y}-${MONTH}-${DAY}T00:00:00+02:00`).getTime();
+
+  // prossima data utile: quella di quest'anno se la finestra SÌ non è ancora finita, altrimenti l'anno dopo
+  function nextTarget(now) {
+    const y = new Date(now).getFullYear();
+    return now < targetOf(y) + DURATION ? targetOf(y) : targetOf(y + 1);
+  }
 
   const $ = id => document.getElementById(id);
   const forced = location.search.includes("si");
 
   let isYes = false;
+  let raf = 0, onResize = null;
 
   function setYes() {
     isYes = true;
@@ -45,21 +55,43 @@
     confetti();
   }
 
+  function setNo() {
+    isYes = false;
+    document.body.classList.remove("yes");
+    $("answer").textContent = "NO";
+    document.title = "NO";
+    stopConfetti();
+  }
+
   function tick() {
-    const left = TARGET - Date.now();
-    if (forced || left <= 0) { if (!isYes) setYes(); return; }
+    const now = Date.now();
+    const target = nextTarget(now);
+    const left = target - now;
+    const inWindow = now >= target && now < target + DURATION;
+
+    if (forced || inWindow) { if (!isYes) setYes(); return; }
+    if (isYes) setNo();
+
     const s = Math.floor(left / 1000);
-    const h = String(Math.floor(s / 3600)).padStart(2, "0");
+    const d = Math.floor(s / 86400);
+    const h = String(Math.floor(s % 86400 / 3600)).padStart(2, "0");
     const m = String(Math.floor(s % 3600 / 60)).padStart(2, "0");
     const sec = String(s % 60).padStart(2, "0");
-    $("sub").textContent = `mancano ${h}:${m}:${sec}`;
+    $("sub").textContent = `mancano ${d}g ${h}:${m}:${sec}`;
   }
   setInterval(tick, 250); tick();
+
+  function stopConfetti() {
+    cancelAnimationFrame(raf);
+    if (onResize) removeEventListener("resize", onResize);
+    const cv = $("c");
+    cv.getContext("2d").clearRect(0, 0, cv.width, cv.height);
+  }
 
   function confetti() {
     const cv = $("c"), ctx = cv.getContext("2d");
     const fit = () => { cv.width = innerWidth; cv.height = innerHeight; };
-    fit(); addEventListener("resize", fit);
+    fit(); onResize = fit; addEventListener("resize", fit);
     const colors = ["#d6003c", "#111", "#fff", "#00a86b", "#1e6fff", "#ff7a00"];
     const ps = Array.from({ length: 220 }, () => ({
       x: Math.random() * cv.width, y: -Math.random() * cv.height,
@@ -76,7 +108,7 @@
         ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r);
         ctx.fillStyle = p.c; ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); ctx.restore();
       }
-      requestAnimationFrame(frame);
+      raf = requestAnimationFrame(frame);
     })();
   }
 </script>
